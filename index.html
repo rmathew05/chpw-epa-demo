@@ -99,6 +99,11 @@
   .tl .ok{color:#6fd394;}
   .tl .warn{color:#e8c468;}
   .tl .err{color:#f08f86;}
+  /* WA regulatory strip */
+  .reg-strip{background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--chpw-orange); border-radius:10px; padding:10px 16px; font-size:12px; color:var(--muted); line-height:1.7; margin-top:10px;}
+  .reg-strip b{color:var(--ink);}
+  .reg-strip a{color:var(--chpw-accent); font-weight:600; text-decoration:none;}
+  .reg-strip a:hover{text-decoration:underline;}
   /* modal */
   .overlay{position:fixed; inset:0; background:rgba(10,25,40,.55); display:none; align-items:center; justify-content:center; z-index:50;}
   .overlay.show{display:flex;}
@@ -190,6 +195,7 @@
   <div class="logo">CHPW <span>| Interoperability Hub | ePA workflow representation</span></div>
   <div class="tag">Da Vinci CRD · DTR · PAS · CDex</div>
   <div class="tag">CMS-0057-F</div>
+  <div class="tag">WA HB 1357 · SHB 1706 · RCW 74.09.840</div>
   <button class="btn ghost on" id="directToggle" style="margin-left:auto" onclick="toggleDirect()">📤 DIRECT workflow: Off</button>
   <button class="btn ghost on" id="memberToggle" onclick="toggleMember()">👤 Member view: Off</button>
   <button class="btn ghost on" id="stepToggle" onclick="toggleStep()">⏭ Step mode: On</button>
@@ -324,6 +330,16 @@
   <div class="trace">
     <div class="trace-head">Live FHIR Flow Trace</div>
     <div class="tl" id="trace"><span class="t">—</span> Waiting for activity. Sign an order in the EHR to begin.</div>
+  </div>
+</div>
+
+<!-- WA REGULATORY BASIS -->
+<div class="trace-wrap">
+  <div class="reg-strip">
+    <b>Washington regulatory basis:</b>
+    <b>HB 1357 (2023)</b> — established PA decision timeframes, clinical-criteria requirements, transparency requirements and the original API mandate ·
+    <b>SHB 1706 (2025)</b> — updated the API requirements and aligned implementation with CMS-0057-F for January 1, 2027 ·
+    Current controlling statute: <a href="https://app.leg.wa.gov/RCW/default.aspx?cite=74.09.840" target="_blank" rel="noopener">RCW 74.09.840</a>
   </div>
 </div>
 
