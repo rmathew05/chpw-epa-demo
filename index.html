@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHPW ePA Demo — Da Vinci Burden Reduction (CRD / DTR / PAS)</title>
+<style>
+  :root{
+    --chpw-blue:#0178aa; --chpw-blue-dark:#015a80; --chpw-accent:#1d8bbe; --chpw-orange:#c25713;
+    --bg:#eef2f6; --panel:#ffffff; --line:#d7dee6; --ink:#1c2733; --muted:#5d6b7a;
+    --green:#1e7e45; --green-bg:#e7f5ec; --amber:#9a6700; --amber-bg:#fdf3d7;
+    --red:#b3261e; --red-bg:#fbe9e7; --purple:#5b3fa8;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink); font-size:14px;}
+  header{background:var(--chpw-blue); color:#fff; padding:10px 20px; display:flex; align-items:center; gap:14px;}
+  header .logo{font-weight:700; font-size:17px; letter-spacing:.3px;}
+  header .logo span{color:#9edcf5; font-weight:400;}
+  header .tag{font-size:11.5px; background:rgba(255,255,255,.14); padding:3px 10px; border-radius:20px;}
+  header .reset{margin-left:auto;}
+  button{font-family:inherit; cursor:pointer;}
+  .btn{background:var(--chpw-accent); color:#fff; border:none; border-radius:6px; padding:8px 16px; font-size:13.5px; font-weight:600;}
+  .btn:hover{background:var(--chpw-blue);}
+  .btn:disabled{background:#b7c4cf; cursor:not-allowed;}
+  .btn.ghost{background:#fff; color:var(--chpw-accent); border:1px solid var(--chpw-accent);}
+  .btn.ghost:hover{background:#eaf6fb;}
+  .btn.ghost.on{background:#fde8c2; color:#9a6700; border-color:#9a6700;}
+  #nextStepBtn{background:#1e7e45;} #nextStepBtn:hover{background:#176235;}
+  body.direct-off #directSection{display:none;}
+  body.direct-off .ccd-action{display:none;}
+  .layout{display:grid; grid-template-columns:1.1fr 1.1fr .85fr; gap:14px; padding:14px; max-width:1500px; margin:0 auto; position:relative;}
+  .layout.no-member{grid-template-columns:1fr 1.5fr;}
+  .layout.no-member .member{display:none;}
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden; display:flex; flex-direction:column; min-height:540px;}
+  .panel-head{padding:12px 16px; min-height:64px; display:flex; flex-direction:column; justify-content:center; gap:3px;}
+  .panel-head .ttl{font-weight:700; font-size:13px; letter-spacing:.4px; text-transform:uppercase; display:flex; align-items:center; gap:7px;}
+  .panel-head .sub{font-weight:400; letter-spacing:0; color:rgba(255,255,255,.82); font-size:11.5px; line-height:1.35;}
+  .ehr .panel-head{background:#7a1f2b; color:#fff; transition:background .35s;}
+  .ehr-ribbon{display:none; font-size:11px; font-weight:600; padding:6px 16px; letter-spacing:.3px; border-bottom:1px solid var(--line);}
+  .ehr-ribbon.on{display:block;}
+  #ehrPanel{transition:border-color .35s, box-shadow .35s;}
+  .payer .panel-head{background:var(--chpw-blue-dark); color:#fff;}
+  .panel-body{padding:16px; flex:1;}
+  .pt-banner{background:#f4f7fa; border:1px solid var(--line); border-radius:8px; padding:10px 14px; display:flex; gap:18px; flex-wrap:wrap; margin-bottom:14px;}
+  .pt-banner b{font-size:15px;}
+  .pt-banner .kv{font-size:12px; color:var(--muted);}
+  .pt-banner .kv span{color:var(--ink); font-weight:600;}
+  h3.sec{font-size:12px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin:14px 0 8px;}
+  select,input{font-family:inherit; font-size:13.5px; padding:8px 10px; border:1px solid var(--line); border-radius:6px; width:100%;}
+  .order-row{display:flex; gap:10px; align-items:center;}
+  .order-row select{flex:1;}
+  .card{border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin-top:12px;}
+  .card.crd{border-left:4px solid var(--chpw-accent); background:#f3f9fd;}
+  .card.crd.nopa{border-left-color:var(--green); background:var(--green-bg);}
+  .card h4{font-size:13.5px; margin-bottom:4px;}
+  .card p{font-size:13px; color:var(--muted); margin-bottom:8px;}
+  .badge{display:inline-block; font-size:11px; font-weight:700; padding:2px 9px; border-radius:12px; letter-spacing:.3px;}
+  .badge.req{background:var(--amber-bg); color:var(--amber);}
+  .badge.no{background:var(--green-bg); color:var(--green);}
+  .badge.appr{background:var(--green-bg); color:var(--green);}
+  .badge.pend{background:var(--amber-bg); color:var(--amber);}
+  .badge.den{background:var(--red-bg); color:var(--red);}
+  .decision{border-radius:8px; padding:14px; margin-top:12px; border:1px solid;}
+  .decision.appr{background:var(--green-bg); border-color:#b4dec4;}
+  .decision.pend{background:var(--amber-bg); border-color:#ecd9a0;}
+  .decision.den{background:var(--red-bg); border-color:#efc4bf;}
+  .decision h4{font-size:14px; margin-bottom:6px;}
+  .decision .kv{font-size:12.5px; margin-top:3px;}
+  .decision .kv span{font-weight:700;}
+  /* payer side */
+  .hub-inner{border:1.5px solid var(--chpw-blue); border-radius:10px; background:#f4f9fd; padding:13px;}
+  .api-rail{display:flex; gap:10px; margin-bottom:14px;}
+  .api{flex:1; border:1.5px solid var(--line); border-radius:8px; padding:10px; text-align:center; transition:all .3s;}
+  .api .nm{font-weight:700; font-size:14px;}
+  .api .ds{font-size:10.5px; color:var(--muted); margin-top:2px;}
+  .api.active{border-color:var(--chpw-accent); background:#eaf6fb; box-shadow:0 0 0 3px rgba(29,139,190,.15);}
+  .api.done{border-color:var(--green); background:var(--green-bg);}
+  .um-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:8px;}
+  .um{border:1.5px solid var(--line); border-radius:8px; padding:8px 10px; font-size:12px; transition:all .3s;}
+  .um b{display:block; font-size:13px;}
+  .um .role{color:var(--muted); font-size:11px;}
+  .um.routed{border-color:var(--purple); background:#f1edfb; box-shadow:0 0 0 3px rgba(91,63,168,.12);}
+  .orchestrator{border:1.5px solid var(--chpw-accent); background:#eaf6fb; margin-bottom:8px;}
+  .orchestrator b{color:var(--chpw-blue);}
+  .orchestrator .role{color:var(--chpw-accent);}
+  .criteria-box{border:1.5px solid var(--green); background:#eef7f0;}
+  .criteria-box b{color:var(--green);}
+  .queue-item{border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin-top:8px; display:flex; align-items:center; gap:10px; font-size:13px;}
+  .queue-item .grow{flex:1;}
+  .queue-item .id{font-family:ui-monospace,Menlo,monospace; font-size:11.5px; color:var(--muted);}
+  .empty{color:var(--muted); font-size:12.5px; font-style:italic; padding:8px 0;}
+  /* trace */
+  .trace-wrap{max-width:1500px; margin:0 auto 18px; padding:0 14px;}
+  .trace{background:#0e1822; border-radius:10px; padding:14px 16px; min-height:120px; max-height:260px; overflow-y:auto;}
+  .trace-head{color:#8fb8dd; font-size:11px; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;}
+  .tl{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12px; line-height:1.75; color:#c9d8e6; white-space:pre-wrap;}
+  .tl .t{color:#5d7a94;}
+  .tl .sys{color:#7ec8ff; font-weight:600;}
+  .tl .ok{color:#6fd394;}
+  .tl .warn{color:#e8c468;}
+  .tl .err{color:#f08f86;}
+  /* modal */
+  .overlay{position:fixed; inset:0; background:rgba(10,25,40,.55); display:none; align-items:center; justify-content:center; z-index:50;}
+  .overlay.show{display:flex;}
+  .modal{background:#fff; border-radius:12px; width:560px; max-width:92vw; max-height:88vh; overflow-y:auto;}
+  .modal-head{background:var(--chpw-blue); color:#fff; padding:12px 18px; border-radius:12px 12px 0 0;}
+  .modal-head h3{font-size:15px;}
+  .modal-head p{font-size:11.5px; color:#bfe4f5; margin-top:2px;}
+  .modal-body{padding:18px;}
+  .q{margin-bottom:14px;}
+  .q label{display:block; font-size:13px; font-weight:600; margin-bottom:6px;}
+  .q .prefill{font-size:11px; color:var(--green); font-weight:600; margin-left:6px;}
+  .q .opts{display:flex; gap:8px; flex-wrap:wrap;}
+  .q .opts button{border:1.5px solid var(--line); background:#fff; border-radius:6px; padding:7px 14px; font-size:13px;}
+  .q .opts button.sel{border-color:var(--chpw-accent); background:#eaf6fb; font-weight:700; color:var(--chpw-blue);}
+  .modal-foot{padding:0 18px 18px; display:flex; justify-content:flex-end; gap:10px;}
+  .note{font-size:11.5px; color:var(--muted); background:#f4f7fa; border-radius:6px; padding:8px 10px; margin-bottom:14px;}
+  .pulse{animation:pulse 1s ease-in-out infinite;}
+  @keyframes pulse{50%{opacity:.55;}}
+  /* metrics bar */
+  .metrics{max-width:1500px; margin:14px auto 0; padding:0 14px; display:grid; grid-template-columns:repeat(5,1fr); gap:12px;}
+  .metric{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px 14px;}
+  .metric .v{font-size:24px; font-weight:800; color:var(--chpw-blue); line-height:1;}
+  .metric .v small{font-size:13px; font-weight:700; color:var(--muted);}
+  .metric .l{font-size:11px; color:var(--muted); margin-top:5px; text-transform:uppercase; letter-spacing:.4px;}
+  .metric.hl .v{color:var(--green);}
+  .metric .delta{font-size:10.5px; color:var(--green); font-weight:600; margin-top:2px;}
+  /* member panel */
+  .member .panel-head{background:#0d6b6b; color:#fff;}
+  .mstep{display:flex; gap:10px; align-items:flex-start; padding:8px 0; opacity:.4; transition:opacity .3s;}
+  .mstep.on{opacity:1;}
+  .mstep .dot{width:22px; height:22px; border-radius:50%; background:var(--line); color:#fff; font-size:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-weight:700;}
+  .mstep.on .dot{background:#0d6b6b;}
+  .mstep.on.appr .dot{background:var(--green);} .mstep.on.den .dot{background:var(--red);} .mstep.on.pend .dot{background:var(--amber);}
+  .mstep .mt{font-size:13px; font-weight:600;}
+  .mstep .md{font-size:11.5px; color:var(--muted);}
+  .idcard{background:linear-gradient(135deg,#015a80,#1d8bbe); color:#fff; border-radius:10px; padding:14px; margin-top:6px;}
+  .idcard .row{display:flex; justify-content:space-between; font-size:11px; opacity:.85; margin-top:6px;}
+  .idcard .row b{font-size:13px; opacity:1; font-weight:700;}
+  .idcard .brand{font-size:12px; letter-spacing:1px; opacity:.9;}
+  .letter{border:1px solid var(--line); border-radius:8px; padding:12px; margin-top:10px; font-size:12.5px; background:#fbfdff;}
+  .letter h5{font-size:12px; margin-bottom:4px;}
+  /* guided narrator */
+  .narrator{position:fixed; right:18px; bottom:18px; width:340px; background:#0e1822; color:#e7f0f8; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,.35); z-index:60; display:none; overflow:hidden;}
+  .narrator.show{display:block;}
+  .narrator .nh{background:#16263a; padding:10px 14px; font-size:12px; font-weight:700; letter-spacing:.4px; display:flex; align-items:center; gap:8px;}
+  .narrator .nh .step{margin-left:auto; font-weight:400; color:#8fb8dd; font-size:11px;}
+  .narrator .nb{padding:14px; font-size:13px; line-height:1.5;}
+  .narrator .nb b{color:#7ec8ff;}
+  .narrator .nf{padding:0 14px 14px; display:flex; gap:8px; justify-content:flex-end;}
+  .narrator .nf button{border-radius:6px; padding:7px 14px; font-size:12.5px; font-weight:600; border:none;}
+  .narrator .skip{background:transparent; color:#8fb8dd; border:1px solid #2b3e54 !important;}
+  .narrator .next{background:var(--chpw-accent); color:#fff;}
+  /* flow connector overlay */
+  #flowLayer{position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:6; overflow:visible;}
+  .flow-path{fill:none; stroke-width:2.5; stroke-linecap:round; stroke-dasharray:7 6; animation:dashflow .7s linear infinite; opacity:.9;}
+  @keyframes dashflow{to{stroke-dashoffset:-13;}}
+  @media (max-width:1100px){.layout,.layout.no-member{grid-template-columns:1fr;} .metrics{grid-template-columns:repeat(2,1fr);} #flowLayer{display:none;}}
+  @media (max-width:600px){
+    body{font-size:13.5px;}
+    header{flex-wrap:wrap; gap:7px 10px; padding:9px 12px;}
+    header .logo{font-size:15px; width:100%;}
+    header .tag{font-size:10px; padding:2px 8px;}
+    header .reset{margin-left:auto;}
+    .btn{padding:7px 12px; font-size:12.5px;}
+    .metrics{margin-top:10px; padding:0 10px; gap:8px;}
+    .metric{padding:10px 11px;}
+    .metric .v{font-size:19px;} .metric .l{font-size:9.5px; letter-spacing:.2px;} .metric .delta{font-size:9.5px;}
+    .layout{padding:10px; gap:10px;}
+    .panel{min-height:auto;}
+    .panel-head{min-height:auto; padding:10px 13px;}
+    .panel-body{padding:13px;}
+    .pt-banner{gap:10px 14px; padding:9px 11px;}
+    .order-row{flex-wrap:wrap;}
+    .order-row select{flex:1 1 100%;}
+    .order-row .btn{flex:1 1 100%;}
+    .api-rail{gap:6px;}
+    .api{padding:8px 6px;} .api .nm{font-size:13px;} .api .ds{font-size:9px; line-height:1.15;}
+    .um-grid{grid-template-columns:repeat(2,1fr) !important;}
+    .trace-wrap{padding:0 10px;}
+    .trace{max-height:200px;}
+    .narrator{left:8px; right:8px; bottom:8px; width:auto;}
+    .modal-body{padding:15px;}
+  }
+</style>
+</head>
+<body class="direct-off">
+
+<header>
+  <div class="logo">CHPW <span>| Interoperability Hub | ePA workflow representation</span></div>
+  <div class="tag">Da Vinci CRD · DTR · PAS · CDex</div>
+  <div class="tag">CMS-0057-F</div>
+  <button class="btn ghost on" id="directToggle" style="margin-left:auto" onclick="toggleDirect()">📤 DIRECT workflow: Off</button>
+  <button class="btn ghost on" id="memberToggle" onclick="toggleMember()">👤 Member view: Off</button>
+  <button class="btn ghost on" id="stepToggle" onclick="toggleStep()">⏭ Step mode: On</button>
+  <button class="btn" id="nextStepBtn" style="display:none" onclick="doNext()">Next ▶</button>
+  <button class="btn reset" onclick="startGuided()">▶ Guided demo</button>
+  <button class="btn ghost" onclick="resetDemo()">↺ Reset</button>
+</header>
+
+<!-- METRICS / ROI -->
+<div class="metrics" id="metrics">
+  <div class="metric"><div class="v" id="m-total">0</div><div class="l">PA requests</div></div>
+  <div class="metric hl"><div class="v" id="m-touchless">0<small>%</small></div><div class="l">Touchless auto-approval</div></div>
+  <div class="metric"><div class="v" id="m-turn">&lt;1<small> min</small></div><div class="l">Avg turnaround</div><div class="delta">vs 3–5 days manual</div></div>
+  <div class="metric hl"><div class="v" id="m-cdex">0</div><div class="l">Doc gaps closed via CDex</div></div>
+  <div class="metric"><div class="v" id="m-saved">0<small> hrs</small></div><div class="l">Provider time saved</div></div>
+</div>
+
+<div class="layout no-member">
+
+  <!-- PROVIDER EHR -->
+  <div class="panel ehr" id="ehrPanel">
+    <div class="panel-head" id="ehrHead"><span class="ttl" id="ehrTtl">🏥 Provider EHR System Workflow</span><span class="sub" id="ehrSub">Epic / OCHIN Epic / eCW · SMART on FHIR flow</span></div>
+    <div class="ehr-ribbon" id="ehrRibbon"></div>
+    <div class="panel-body">
+      <div class="pt-banner">
+        <div><b>Rosa Martinez</b><div class="kv">DOB <span>03/14/1968</span> · F · 58y</div></div>
+        <div class="kv">Member ID<br><span>CHPW-77120945</span></div>
+        <div class="kv">Plan<br><span>Apple Health (Medicaid)</span></div>
+        <div class="kv"><span id="provLabel">PCP</span><br><span id="provVal">Dr. J. Kim, UW Medicine — Family Medicine</span></div>
+      </div>
+
+      <h3 class="sec">New Order</h3>
+      <div class="order-row">
+        <select id="orderSel">
+          <optgroup label="──  Epic — UW Medicine  (write-back via eHealth Exchange)  ──">
+          <option value="mri">🩻 MRI Lumbar Spine w/o contrast — CPT 72148</option>
+          <option value="tka">🩻 Total Knee Arthroplasty — CPT 27447</option>
+          <option value="pet">🩻 PET/CT Staging, oncologic — CPT 78815</option>
+          <option value="ozempic">💊 Ozempic (semaglutide) — Rx · pharmacy</option>
+          </optgroup>
+          <optgroup label="──  OCHIN Epic — Sea Mar CHC  (write-back via eHealth Exchange)  ──">
+          <option value="pt">🏥 Physical Therapy ×12 visits — CPT 97110</option>
+          <option value="bh">🧠 Behavioral Health IOP — H0015</option>
+          <option value="dupixent">💊 Dupixent (dupilumab) — Rx · pharmacy</option>
+          </optgroup>
+          <optgroup label="──  eCW — independent practices  (write-back via eHealth Exchange)  ──">
+          <option value="cpap">🏥 CPAP Device (DME) — E0601</option>
+          <option value="hha">🏥 Skilled Home Health — HCPCS G0299</option>
+          <option value="humira">💊 Humira (adalimumab) — Rx · pharmacy</option>
+          </optgroup>
+        </select>
+        <button class="btn" id="signBtn" onclick="signOrder()">Sign Order</button>
+      </div>
+      <div id="emrTag" style="margin-top:8px;font-size:12px;color:var(--muted)"></div>
+
+      <div id="crdCard"></div>
+      <div id="dtrStatus"></div>
+      <div id="ehrDecision"></div>
+    </div>
+  </div>
+
+  <!-- PAYER HUB -->
+  <div class="panel payer">
+    <div class="panel-head"><span class="ttl">☁️ CHPW Interoperability Hub</span><span class="sub">Workflow at payer with delegated vendors</span></div>
+    <div class="panel-body">
+      <div class="hub-inner">
+      <div class="api-rail">
+        <div class="api" id="api-crd"><div class="nm">CHPW - CRD</div><div class="ds">Coverage Requirements Discovery</div></div>
+        <div class="api" id="api-dtr"><div class="nm">CHPW - DTR</div><div class="ds">Documentation Templates &amp; Rules</div></div>
+        <div class="api" id="api-pas"><div class="nm">CHPW-PAS</div><div class="ds">Prior Auth Support</div></div>
+      </div>
+
+      <div id="directSection">
+      <h3 class="sec">Inbound Clinical Data — DIRECT → FHIR</h3>
+      <div class="um-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="um" id="dm-direct"><b>DIRECT Messaging</b><span class="role">Secure email · receives C-CDA / CCD from provider</span></div>
+        <div class="um" id="dm-xform"><b>CDA → FHIR Transform</b><span class="role">C-CDA parsed &amp; mapped to FHIR R4 resources</span></div>
+        <div class="um" id="dm-fhir"><b>FHIR Repository</b><span class="role">Payer FHIR store · prefill source for DTR</span></div>
+      </div>
+      </div>
+
+      <h3 class="sec">UM Routing</h3>
+      <div class="um orchestrator" id="um-router"><b>CHPW ePA Router</b><span class="role">SMART on FHIR orchestrator · routes to Jiva (medical UM) or ESI (pharmacy)</span></div>
+      </div>
+
+      <div class="um-grid">
+        <div class="um" id="um-jiva"><b>🏥 Jiva (ZeOmega)</b><span class="role">Core UM platform · medical / BH / DME / home health</span></div>
+        <div class="um" id="um-esi"><b>💊 ESI (CMS-0062)</b><span class="role">Pharmacy · Express Scripts ePA</span></div>
+      </div>
+
+      <h3 class="sec">Clinical Criteria Engine</h3>
+      <div class="um criteria-box" id="criteria"><b>Clinical Criteria — MCG</b><span class="role" id="criteriaRole">MCG care guidelines · evidence-based medical necessity — checked by Jiva before adjudicating</span></div>
+
+      <h3 class="sec">Clinical Data Exchange — Da Vinci CDex or IHE</h3>
+      <div class="um-grid" style="grid-template-columns:1fr">
+        <div class="um" id="net-ehx"><b>eHX — eHealth Exchange / CHPW SMART-on-FHIR App</b><span class="role">National network · CDex Task / XCA · pulls data from provider EHRs · proxy SMART-on-FHIR write-back to every EMR (no Epic Payer Platform at CHPW)</span></div>
+      </div>
+      <div id="cdexAction" style="margin-top:8px"></div>
+
+      <h3 class="sec">PAS Intake Queue</h3>
+      <div id="queue"><div class="empty">No prior auth requests yet.</div></div>
+    </div>
+  </div>
+
+  <!-- MEMBER VIEW -->
+  <div class="panel member">
+    <div class="panel-head"><span class="ttl">📱 Member View</span><span class="sub">3rd Party App used by CHPW members · patient access (CMS-0057 and CMS-9115)</span></div>
+    <div class="panel-body">
+      <div class="idcard">
+        <div class="brand">CHPW · Community Health Plan of Washington</div>
+        <div class="row"><span>Member</span><b>Rosa Martinez</b></div>
+        <div class="row"><span>Member ID</span><b>CHPW-77120945</b></div>
+        <div class="row"><span>Plan</span><b>Apple Health (Medicaid)</b></div>
+        <div class="row"><span>RxBIN / PCP</span><b>003858 · Dr. Kim</b></div>
+      </div>
+
+      <h3 class="sec">Authorization Status</h3>
+      <div id="memberSteps">
+        <div class="mstep" id="ms-1"><div class="dot">1</div><div><div class="mt">Service ordered</div><div class="md">Your provider submitted a request</div></div></div>
+        <div class="mstep" id="ms-2"><div class="dot">2</div><div><div class="mt">Reviewed by plan</div><div class="md">Coverage &amp; clinical criteria checked</div></div></div>
+        <div class="mstep" id="ms-3"><div class="dot">3</div><div><div class="mt">Decision</div><div class="md">Outcome and next steps</div></div></div>
+      </div>
+      <div id="memberLetter"></div>
+    </div>
+  </div>
+
+  <svg id="flowLayer"></svg>
+</div>
+
+<!-- FLOW TRACE -->
+<div class="trace-wrap">
+  <div class="trace">
+    <div class="trace-head">Live FHIR Flow Trace</div>
+    <div class="tl" id="trace"><span class="t">—</span> Waiting for activity. Sign an order in the EHR to begin.</div>
+  </div>
+</div>
+
+<!-- DTR MODAL -->
+<div class="overlay" id="dtrModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="dtrTitle">DTR — Documentation Questionnaire</h3>
+      <p id="dtrPrefillNote">SMART on FHIR app · launched from EHR · answers prefilled from chart via CQL</p>
+    </div>
+    <div class="modal-body">
+      <div class="note">✦ Fields marked <b style="color:var(--green)">prefilled</b> were auto-populated from the patient's FHIR record — the provider only confirms.</div>
+      <div id="dtrQs"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" onclick="closeDtr()">Cancel</button>
+      <button class="btn" id="dtrSubmit" onclick="submitDtr()">Submit & Send PA (PAS)</button>
+    </div>
+  </div>
+</div>
+
+<!-- GUIDED NARRATOR -->
+<div class="narrator" id="narrator">
+  <div class="nh">🎬 Guided Demo
+    <button id="voiceToggle" onclick="toggleVoice()" title="Toggle voiceover" style="margin-left:8px;background:transparent;border:1px solid #2b3e54;color:#8fb8dd;border-radius:5px;padding:2px 8px;font-size:11px;cursor:pointer;">🔊 Voice</button>
+    <span class="step" id="narStep"></span></div>
+  <div class="nb" id="narBody"></div>
+  <div class="nf">
+    <button class="skip" onclick="endGuided()">Exit</button>
+    <button class="next" id="narNext" onclick="narAdvance()">Next ▶</button>
+  </div>
+</div>
+
+<script>
+const SCEN = {
+  mri: {
+    label:"MRI Lumbar Spine w/o contrast", code:"CPT 72148", paRequired:true, emr:"Epic",
+    um:"jiva", umName:"Jiva (ZeOmega)", umRole:"Core UM · Radiology",
+    questionnaire:[
+      {id:"dx", q:"Primary diagnosis", prefill:"M54.16 — Radiculopathy, lumbar region", type:"text"},
+      {id:"dur", q:"Duration of symptoms", prefill:"8 weeks (from problem list)", type:"text"},
+      {id:"cons", q:"Completed ≥6 weeks of conservative therapy (PT / NSAIDs)?", type:"yn", drives:true,
+        yes:"approve", no:"deny",
+        denyReason:"Conservative therapy not documented. Per policy CHPW-RAD-014 and MCG imaging criteria, 6 weeks of PT/NSAIDs is required before advanced imaging."},
+      {id:"neuro", q:"Progressive neurologic deficit present?", type:"yn"}
+    ],
+    mcg:{set:"MCG Care Guidelines 2026 — Ambulatory Care: MRI Lumbar Spine", criteria:[
+      {c:"≥6 weeks conservative therapy (PT / NSAIDs) documented", key:true},
+      {c:"No red-flag findings requiring urgent imaging"},
+      {c:"Clinical exam correlates with radicular symptoms"}]},
+    approve:{auth:"JIVA-RAD-118394", note:"Valid 60 days · UW Medicine Imaging — Roosevelt"},
+    cdex:{net:"ehx", netName:"eHealth Exchange", source:"Olympic Sports & Spine Therapy (eCW)",
+      docs:["PT progress notes — 8 weeks conservative therapy (DocumentReference/pt-4471)","Medication history — NSAID course, 10 weeks"],
+      authPrefix:"JIVA", note:"Conservative therapy documented at Olympic Sports & Spine — denial overturned on re-adjudication."}
+  },
+  tka: {
+    label:"Total Knee Arthroplasty", code:"CPT 27447", paRequired:true, emr:"Epic",
+    um:"jiva", umName:"Jiva (ZeOmega)", umRole:"Core UM · MSK / Surgical",
+    questionnaire:[
+      {id:"dx", q:"Primary diagnosis", prefill:"M17.11 — Unilateral primary osteoarthritis, right knee", type:"text"},
+      {id:"img", q:"Weight-bearing X-ray findings", prefill:"KL Grade 4, bone-on-bone (radiology report 05/18/2026)", type:"text"},
+      {id:"cons", q:"Conservative management completed", type:"choice", drives:true,
+        opts:["3+ months, documented","Less than 3 months"],
+        map:{"3+ months, documented":"approve","Less than 3 months":"pend"},
+        pendReason:"Per policy CHPW-MSK-021 and MCG surgical criteria, 3 months of conservative management (PT, injections, NSAIDs) must be documented before TKA. Pended for records."},
+      {id:"bmi", q:"BMI", prefill:"31.2 (from vitals)", type:"text"}
+    ],
+    mcg:{set:"MCG Care Guidelines 2026 — Surgical Care: Total Knee Arthroplasty", criteria:[
+      {c:"Advanced osteoarthritis on weight-bearing imaging (KL 3–4)", key:true},
+      {c:"≥3 months conservative management documented", key:true},
+      {c:"Functional limitation despite treatment"}]},
+    approve:{auth:"JIVA-MSK-204417", note:"Valid 90 days · Proliance Orthopedic Associates · includes 3-day inpatient stay"},
+    cdex:{net:"ehx", netName:"eHealth Exchange", source:"Proliance Orthopedic Associates (eCW)",
+      docs:["PT course — 14 weeks (DocumentReference/pt-8812)","Corticosteroid injection records ×2","Orthopedic consult notes"],
+      authPrefix:"JIVA", note:"Conservative management documented at Proliance — approved on re-adjudication."}
+  },
+  pet: {
+    label:"PET/CT Staging, oncologic", code:"CPT 78815", paRequired:true, emr:"Epic",
+    um:"jiva", umName:"Jiva (ZeOmega)", umRole:"Core UM · Oncology Imaging",
+    questionnaire:[
+      {id:"dx", q:"Primary diagnosis", prefill:"C34.11 — Malignant neoplasm, upper lobe, right lung", type:"text"},
+      {id:"tissue", q:"Tissue/cytology diagnosis of malignancy documented?", type:"yn", drives:true,
+        yes:"approve", no:"pend",
+        pendReason:"Per MCG oncologic imaging criteria, initial oncologic PET/CT requires a confirmed tissue diagnosis. Pended pending pathology."},
+      {id:"intent", q:"Imaging indication", prefill:"Initial staging (newly diagnosed)", type:"text"}
+    ],
+    mcg:{set:"MCG Care Guidelines 2026 — Ambulatory Care: PET/CT Oncologic Imaging", criteria:[
+      {c:"Tissue diagnosis of malignancy confirmed", key:true},
+      {c:"Staging not yet established by prior imaging"},
+      {c:"Result will change management"}]},
+    approve:{auth:"JIVA-ONC-512204", note:"Valid 45 days · Fred Hutchinson Cancer Center · single staging study"},
+    cdex:{net:"ehx", netName:"eHealth Exchange", source:"Fred Hutchinson Cancer Center (Epic)",
+      docs:["Surgical pathology — adenocarcinoma, CT-guided biopsy RUL (DocumentReference/path-3382)"],
+      authPrefix:"JIVA", note:"Tissue diagnosis retrieved from Fred Hutch — staging PET/CT approved on re-adjudication."}
+  },
+  pt: {
+    label:"Physical Therapy, 12 visits", code:"CPT 97110", paRequired:true, emr:"OCHIN Epic",
+    um:"jiva", umName:"Jiva (ZeOmega)", umRole:"Core UM · Rehab",
+    questionnaire:[
+      {id:"dx", q:"Primary diagnosis", prefill:"M25.561 — Pain in right knee", type:"text"},
+      {id:"eval", q:"Initial PT evaluation documents functional deficit?", type:"yn", drives:true,
+        yes:"approve", no:"pend",
+        pendReason:"Initial PT evaluation with objective functional measures required (policy CHPW-REHAB-008). Pended for documentation."},
+      {id:"prior", q:"Visits used this benefit year", prefill:"0 of 30 (from accumulator)", type:"text"}
+    ],
+    mcg:{set:"MCG Care Guidelines 2026 — Rehabilitation: Outpatient Physical Therapy", criteria:[
+      {c:"Functional deficit documented on standardized measure", key:true},
+      {c:"Skilled therapy required (not maintenance level)"},
+      {c:"Expected measurable improvement within 90 days"}]},
+    approve:{auth:"JIVA-PT-66120", note:"12 visits authorized · valid 90 days · auto-adjudicated in Jiva"},
+    cdex:{net:"ehx", netName:"eHealth Exchange", source:"Sea Mar Rehab Services (OCHIN Epic)",
+      docs:["PT initial evaluation with LEFS score 42/80 (DocumentReference/pt-3307)"],
+      authPrefix:"JIVA", note:"Functional deficit documented — auto-approved in Jiva."}
+  },
+  bh: {
+    label:"Behavioral Health IOP", code:"H0015", paRequired:true, emr:"OCHIN Epic",
+    um:"jiva", umName:"Jiva (ZeOmega)", umRole:"Core UM · Behavioral Health",
+    questionnaire:[
+      {id:"dx", q:"Primary diagnosis", prefill:"F33.1 — Major depressive disorder, recurrent, moderate", type:"text"},
+      {id:"phq", q:"Most recent PHQ-9 score", prefill:"18 (from flowsheet, 06/02/2026)", type:"text"},
+      {id:"lvl", q:"Current level of care attempted", type:"choice", opts:["Outpatient therapy","None"], drives:true,
+        map:{"Outpatient therapy":"pend","None":"pend"},
+        pendReason:"Medical necessity review required — routed to CHPW BH clinical reviewer in Jiva (decision SLA: 72h expedited / 7d standard)."}
+    ],
+    mcg:{set:"MCG Care Guidelines 2026 — Behavioral Health Care: Intensive Outpatient Program", criteria:[
+      {c:"Moderate–severe symptom severity on validated scale (PHQ-9 ≥ 15)"},
+      {c:"Documented response/failure at current level of care", key:true},
+      {c:"Safe to treat outside inpatient setting"}]},
+    pend:{ref:"JIVA-BH-55102", note:"Pended for clinical review · provider will be notified via EHR in-basket"},
+    cdex:{net:"ehx", netName:"eHealth Exchange", source:"Sea Mar Behavioral Health (OCHIN Epic)",
+      docs:["Outpatient therapy notes — 12 sessions (DocumentReference/bh-9920)","PHQ-9 trend flowsheet — 6 months"],
+      authPrefix:"JIVA", note:"Medical necessity confirmed by CHPW BH reviewer in Jiva using retrieved records."}
+  },
+  cpap: {
+    label:"CPAP Device (DME)", code:"E0601", paRequired:true, emr:"eCW",
+    um:"jiva", umName:"Jiva (ZeOmega)", umRole:"Core UM · DME",
+    questionnaire:[
+      {id:"dx", q:"Primary diagnosis", prefill:"G47.33 — Obstructive sleep apnea", type:"text"},
+      {id:"study", q:"Sleep study with AHI ≥ 15 events/hr documented?", type:"yn", drives:true,
+        yes:"approve", no:"deny",
+        denyReason:"No qualifying sleep study on file. Per policy CHPW-DME-002 and MCG DME criteria, polysomnography or home sleep test with AHI ≥ 15 (or ≥ 5 with comorbidities) is required for CPAP coverage."},
+      {id:"supplier", q:"DME supplier", prefill:"AdaptHealth (in-network)", type:"text"}
+    ],
+    mcg:{set:"MCG Care Guidelines 2026 — DME: Positive Airway Pressure Devices", criteria:[
+      {c:"OSA confirmed by polysomnography or home sleep test", key:true},
+      {c:"AHI ≥ 15, or ≥ 5 with documented comorbidities", key:true},
+      {c:"Prescribing provider follow-up plan in place"}]},
+    approve:{auth:"JIVA-DME-90233", note:"10-month rental-to-own · compliance data required at 90 days"},
+    cdex:{net:"ehx", netName:"eHealth Exchange", source:"UW Medicine Sleep Center (Epic)",
+      docs:["Polysomnography report — AHI 28.4 (DocumentReference/sleep-5521)"],
+      authPrefix:"JIVA", note:"Qualifying sleep study retrieved from UW Medicine — denial overturned, CPAP approved."}
+  },
+  hha: {
+    label:"Skilled Home Health", code:"HCPCS G0299", paRequired:true, emr:"eCW",
+    um:"jiva", umName:"Jiva (ZeOmega)", umRole:"Core UM · Home Health",
+    questionnaire:[
+      {id:"dx", q:"Primary diagnosis", prefill:"I50.9 — Heart failure, unspecified", type:"text"},
+      {id:"homebound", q:"Homebound status and skilled nursing need documented by physician?", type:"yn", drives:true,
+        yes:"approve", no:"pend",
+        pendReason:"Per policy CHPW-HH-006 and MCG home care criteria, skilled home health requires documented homebound status and a physician-certified skilled need. Pended — plan of care requested via eHealth Exchange."},
+      {id:"freq", q:"Requested visit frequency", prefill:"Skilled nursing 3×/week, 60 days", type:"text"}
+    ],
+    mcg:{set:"MCG Care Guidelines 2026 — Home Care: Skilled Nursing Services", criteria:[
+      {c:"Homebound status documented", key:true},
+      {c:"Physician-certified skilled need", key:true},
+      {c:"Plan of care signed and time-limited"}]},
+    approve:{auth:"JIVA-HH-52071", note:"Skilled nursing 3×/week ×60 days · plan of care on file"},
+    cdex:{net:"ehx", netName:"eHealth Exchange", source:"EvergreenHealth Home Care (eCW)",
+      docs:["Physician certification of homebound status (DocumentReference/hh-3361)","Signed plan of care (CMS-485)"],
+      authPrefix:"JIVA", note:"Homebound certification + plan of care retrieved via eHealth Exchange — home health approved on re-adjudication."}
+  },
+  ozempic: {
+    label:"Ozempic (semaglutide)", code:"Rx — semaglutide", paRequired:true, emr:"Epic",
+    um:"esi", umName:"ESI (CMS-0062)", umRole:"Pharmacy",
+    questionnaire:[
+      {id:"dx", q:"Primary diagnosis", prefill:"E11.65 — Type 2 diabetes with hyperglycemia", type:"text"},
+      {id:"a1c", q:"Most recent A1C", prefill:"8.4% (lab 05/20/2026)", type:"text"},
+      {id:"step", q:"Tried metformin ≥ 3 months (or contraindicated)?", type:"yn", drives:true,
+        yes:"approve", no:"deny",
+        denyReason:"Formulary step therapy not met. Per ESI National Preferred Formulary (CMS-0062 ePA), a ≥ 3-month metformin trial is required before a GLP-1 agonist for Type 2 diabetes."}
+    ],
+    formulary:"ESI National Preferred Formulary — GLP-1 step therapy (CMS-0062)",
+    approve:{auth:"ESI-RX-50231", note:"12-month authorization · 30-day fills · dispensed via in-network pharmacy"},
+    cdex:{net:"ehx", netName:"eHealth Exchange", source:"UW Medicine Endocrine & Diabetes Care (Epic)",
+      docs:["Medication history — metformin 1000mg BID, 6 months (DocumentReference/med-8801)","A1C trend flowsheet"],
+      authPrefix:"ESI", note:"Metformin trial retrieved via eHealth Exchange — step therapy met, semaglutide approved."}
+  },
+  humira: {
+    label:"Humira (adalimumab)", code:"Rx — adalimumab", paRequired:true, emr:"eCW",
+    um:"esi", umName:"ESI (CMS-0062)", umRole:"Pharmacy",
+    questionnaire:[
+      {id:"dx", q:"Primary diagnosis", prefill:"K50.90 — Crohn's disease, unspecified", type:"text"},
+      {id:"step", q:"Tried and failed conventional therapy (e.g., corticosteroids / immunomodulator)?", type:"yn", drives:true,
+        yes:"approve", no:"deny",
+        denyReason:"Formulary step therapy not met. Per ESI formulary (CMS-0062 ePA), a documented trial/failure of conventional therapy is required before a TNF inhibitor."},
+      {id:"tb", q:"TB screening result", prefill:"QuantiFERON negative, 04/30/2026", type:"text"}
+    ],
+    formulary:"ESI National Preferred Formulary — TNF-inhibitor step therapy (CMS-0062)",
+    approve:{auth:"ESI-RX-50498", note:"12-month authorization · specialty pharmacy dispensing"},
+    cdex:{net:"ehx", netName:"eHealth Exchange", source:"Washington Gastroenterology (eCW)",
+      docs:["Medication history — budesonide + azathioprine, 5 months, inadequate response (DocumentReference/med-8890)","GI consult note"],
+      authPrefix:"ESI", note:"Conventional therapy failure retrieved via eHealth Exchange — step therapy met, adalimumab approved."}
+  },
+  dupixent: {
+    label:"Dupixent (dupilumab)", code:"Rx — dupilumab", paRequired:true, emr:"OCHIN Epic",
+    um:"esi", umName:"ESI (CMS-0062)", umRole:"Pharmacy",
+    questionnaire:[
+      {id:"dx", q:"Primary diagnosis", prefill:"L20.9 — Atopic dermatitis, unspecified", type:"text"},
+      {id:"sev", q:"Moderate-to-severe disease uncontrolled on topical therapy (≥ 2 agents)?", type:"yn", drives:true,
+        yes:"approve", no:"pend",
+        pendReason:"Per ESI formulary (CMS-0062 ePA), dupilumab requires documented moderate-to-severe disease and inadequate response to topical therapy. Pended for records."}
+    ],
+    formulary:"ESI National Preferred Formulary — biologic step therapy (CMS-0062)",
+    approve:{auth:"ESI-RX-50712", note:"12-month authorization · specialty pharmacy dispensing"},
+    cdex:{net:"ehx", netName:"eHealth Exchange", source:"Dermatology Associates of Seattle (eCW)",
+      docs:["Topical therapy history — high-potency steroid + tacrolimus, inadequate control (DocumentReference/med-8920)","Dermatology progress note · EASI 24"],
+      authPrefix:"ESI", note:"Topical therapy failure retrieved via eHealth Exchange — dupilumab approved on re-adjudication."}
+  },
+};
+
+let state = null;
+const $ = id => document.getElementById(id);
+
+/* ---------- EMR SKIN: restyle the provider panel to mimic the real EHR ---------- */
+const EMR_THEME = {
+  "Epic":   {head:"#1a4f8b", head2:"#5cb85c", wordmark:"⬢ Epic", sub:"Hyperspace · SMART on FHIR", accent:"#1a4f8b", tint:"#eef4fb",
+           ribbon:"Snapshot · Chart Review · Orders · Results · Notes · In Basket",
+           provLabel:"PCP", prov:"Dr. J. Kim, UW Medicine — Family Medicine Roosevelt"},
+  "OCHIN Epic": {head:"#00538b", head2:"#7ab648", wordmark:"⬢ OCHIN Epic", sub:"Epic community instance for CHCs · SMART on FHIR", accent:"#00538b", tint:"#eef5ee",
+           ribbon:"Snapshot · Chart Review · Orders · Results · Notes · In Basket",
+           provLabel:"Ordering Provider", prov:"Dr. A. Nguyen, Sea Mar Community Health Centers"},
+  "eCW":    {head:"#173E58", head2:"#FF9900", wordmark:"eClinicalWorks", sub:"eCW · SMART on FHIR", accent:"#173E58", tint:"#eef3f7",
+           ribbon:"Hub · Progress Notes · Orders · Labs · Telephone · Documents",
+           provLabel:"Ordering Provider", prov:"Dr. M. Ellison, Sound Pulmonary & Internal Medicine (Tacoma)"},
+};
+function applyEmrSkin(emr){
+  const t = EMR_THEME[emr];
+  const head=$("ehrHead"), panel=$("ehrPanel"), rb=$("ehrRibbon");
+  if(!t){ // neutral default
+    head.style.background=""; $("ehrTtl").textContent="🏥 Provider EHR System Workflow";
+    $("ehrSub").textContent="Epic / OCHIN Epic / eCW · SMART on FHIR flow";
+    panel.style.borderColor=""; panel.style.boxShadow=""; rb.className="ehr-ribbon";
+    $("provLabel").textContent="PCP"; $("provVal").textContent="Dr. J. Kim, UW Medicine — Family Medicine"; return;
+  }
+  $("provLabel").textContent=t.provLabel; $("provVal").textContent=t.prov;
+  head.style.background=`linear-gradient(100deg, ${t.head} 0%, ${t.head} 60%, ${t.head2} 100%)`;
+  $("ehrTtl").textContent=t.wordmark;
+  $("ehrSub").textContent=`${t.sub} · Provider EHR workflow`;
+  panel.style.borderColor=t.accent;
+  panel.style.boxShadow=`0 0 0 2px ${t.accent}22`;
+  rb.className="ehr-ribbon on"; rb.style.background=t.tint; rb.style.color=t.accent; rb.style.borderColor=t.accent+"44";
+  rb.textContent=t.ribbon;
+}
+function skinForCurrentOrder(){ const s=SCEN[$("orderSel").value]; applyEmrSkin(s?s.emr:null); }
+
+/* ---------- FLOW CONNECTOR LINES ---------- */
+const SVGNS="http://www.w3.org/2000/svg";
+let flows=[]; // {fromSel,toSel,color}
+function addFlow(fromSel,toSel,color){ flows.push({fromSel,toSel,color}); renderFlows(); }
+function clearFlows(){ flows=[]; renderFlows(); }
+// decision returns: vendor -> PAS -> eHealth Exchange proxy SMART-on-FHIR write-back -> EHR + member
+// (CHPW has no Epic Payer Platform — every EMR gets the decision via the eHX proxy)
+async function flowDecision(s,color){
+  $("net-ehx").classList.add("routed");
+  addFlow("#api-pas","#net-ehx",color); await gate(500);
+  addFlow("#net-ehx","#ehrDecision",color); await gate(450);
+  addFlow("#api-pas","#ms-3",C_MEM);
+}
+function clipToRect(cx,cy,hw,hh,dx,dy){
+  if(dx===0&&dy===0) return [cx,cy];
+  const sx = dx? hw/Math.abs(dx) : Infinity;
+  const sy = dy? hh/Math.abs(dy) : Infinity;
+  const s = Math.min(sx,sy);
+  return [cx+dx*s, cy+dy*s];
+}
+function renderFlows(){
+  const svg=$("flowLayer"); if(!svg) return;
+  const lay=document.querySelector(".layout"); const lr=lay.getBoundingClientRect();
+  svg.setAttribute("width",lay.scrollWidth); svg.setAttribute("height",lay.scrollHeight);
+  svg.setAttribute("viewBox",`0 0 ${lay.scrollWidth} ${lay.scrollHeight}`);
+  let html=`<defs><marker id="fa" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L6.5,3 L0,6 Z" fill="context-stroke"/></marker></defs>`;
+  flows.forEach((f,i)=>{
+    const a=document.querySelector(f.fromSel), b=document.querySelector(f.toSel);
+    if(!a||!b) return;
+    const ar=a.getBoundingClientRect(), br=b.getBoundingClientRect();
+    if(!ar.width||!br.width) return;
+    const ax=ar.left-lr.left+ar.width/2, ay=ar.top-lr.top+ar.height/2;
+    const bx=br.left-lr.left+br.width/2, by=br.top-lr.top+br.height/2;
+    const [sx,sy]=clipToRect(ax,ay,ar.width/2,ar.height/2, bx-ax, by-ay);
+    const [ex,ey]=clipToRect(bx,by,br.width/2,br.height/2, ax-bx, ay-by);
+    const mx=(sx+ex)/2, my=(sy+ey)/2;
+    const dx=ex-sx, dy=ey-sy, len=Math.hypot(dx,dy)||1;
+    const off=Math.min(28, len*0.12);
+    const cxp=mx + (-dy/len)*off, cyp=my + (dx/len)*off;
+    html+=`<path class="flow-path" d="M${sx.toFixed(1)},${sy.toFixed(1)} Q${cxp.toFixed(1)},${cyp.toFixed(1)} ${ex.toFixed(1)},${ey.toFixed(1)}" stroke="${f.color}" marker-end="url(#fa)" style="animation-delay:${(i*0.06).toFixed(2)}s"/>`;
+  });
+  svg.innerHTML=html;
+}
+window.addEventListener("resize", renderFlows);
+const C_API="#1d8bbe", C_UM="#5b3fa8", C_OK="#1e7e45", C_WARN="#9a6700", C_DEN="#b3261e", C_CDEX="#c25713", C_MEM="#0d6b6b";
+
+/* ---------- METRICS ---------- */
+const metrics = {total:0, touchless:0, cdex:0, savedHrs:0};
+function bumpMetric(kind){
+  metrics.total++;
+  if(kind==="touchless") metrics.touchless++;
+  // each electronic PA saves ~0.75 provider hrs vs phone/fax/portal
+  metrics.savedHrs += 0.75;
+  renderMetrics();
+}
+function metricCdexResolve(){
+  metrics.cdex++; metrics.touchless++;
+  metrics.savedHrs += 1.5;
+  renderMetrics();
+}
+function renderMetrics(){
+  $("m-total").textContent = metrics.total;
+  const pct = metrics.total ? Math.round(100*metrics.touchless/metrics.total) : 0;
+  $("m-touchless").innerHTML = pct+'<small>%</small>';
+  $("m-cdex").textContent = metrics.cdex;
+  $("m-saved").innerHTML = metrics.savedHrs.toFixed(1)+'<small> hrs</small>';
+}
+
+/* ---------- MEMBER VIEW ---------- */
+function memberStep(n, cls){
+  const el=$("ms-"+n); if(!el) return;
+  el.classList.add("on"); if(cls) el.classList.add(cls);
+}
+function memberReset(){
+  [1,2,3].forEach(n=>{ const e=$("ms-"+n); e.className="mstep"; });
+  $("memberLetter").innerHTML="";
+}
+function memberDecision(outcome, s, detail){
+  memberStep(3, outcome);
+  const map={appr:["✓ Approved","Your service has been approved. No action needed — show your member ID at your appointment."],
+             pend:["⏳ Under review","Your plan needs a bit more information from your provider. We'll update you here — no action needed from you."],
+             den:["✕ Not approved","This request wasn't approved yet. Your provider has the specific reason and can resubmit. You have the right to appeal."]};
+  const [h,b]=map[outcome];
+  const sub=$("ms-3").querySelector(".md"); if(sub) sub.textContent = (outcome==="appr"?"Approved":outcome==="pend"?"Pending more info":"Not approved");
+  $("memberLetter").innerHTML=`<div class="letter"><h5>${h} — ${s.label}</h5>
+    <div>${b}</div>${detail?`<div style="margin-top:6px;color:var(--muted)">${detail}</div>`:""}
+    <div style="margin-top:6px;color:var(--muted);font-size:11px">Pushed to myCHPW member app · Patient Access API (FHIR ExplanationOfBenefit)</div></div>`;
+}
+
+function ts(){ const d=new Date(); return d.toTimeString().slice(0,8); }
+function trace(msg, cls=""){
+  const el=$("trace");
+  if(el.dataset.fresh!=="1"){ el.innerHTML=""; el.dataset.fresh="1"; }
+  el.innerHTML += `<div><span class="t">${ts()}</span>  ${cls?`<span class="${cls}">`:""}${msg}${cls?"</span>":""}</div>`;
+  el.parentElement.scrollTop = el.parentElement.scrollHeight;
+}
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+/* ---------- STEP MODE: gate each stage on a Next click ---------- */
+let stepMode=true, gateResolve=null;
+const HOP_MS = 2000; // 2-second pause between each hop in auto-play
+function gate(ms){
+  if(stepMode){ return new Promise(res=>{ gateResolve=res; showNext(true); }); }
+  return sleep(HOP_MS);
+}
+function doNext(){ if(gateResolve){ const r=gateResolve; gateResolve=null; showNext(false); r(); } }
+function showNext(on){ const b=$("nextStepBtn"); if(b) b.style.display = on ? "inline-block" : "none"; }
+function clearGate(){ gateResolve=null; showNext(false); }
+let directOn = false;
+function toggleDirect(){
+  directOn = !directOn;
+  document.body.classList.toggle("direct-off", !directOn);
+  const b=$("directToggle");
+  b.textContent = directOn ? "📤 DIRECT workflow: On" : "📤 DIRECT workflow: Off";
+  b.classList.toggle("on", !directOn);
+  if(!directOn){ // turning off: drop any CCD ingestion state
+    ccdIngested=false;
+    ["dm-direct","dm-xform","dm-fhir"].forEach(id=>{const e=$(id); if(e) e.classList.remove("routed");});
+    renderFlows();
+  }
+}
+function toggleMember(){
+  const lay=document.querySelector(".layout");
+  const off=lay.classList.toggle("no-member");
+  const b=$("memberToggle");
+  b.textContent = off ? "👤 Member view: Off" : "👤 Member view: On";
+  b.classList.toggle("on", off);
+  renderFlows(); // reposition connector lines for the new layout width
+}
+function toggleStep(){
+  stepMode=!stepMode;
+  const b=$("stepToggle");
+  b.textContent = stepMode ? "⏭ Step mode: On" : "⏭ Step mode: Off";
+  b.classList.toggle("on", stepMode);
+  if(!stepMode) doNext(); // release any pending pause when turning off
+}
+function setApi(id, mode){ const e=$("api-"+id); e.classList.remove("active","done","pulse"); if(mode) e.classList.add(mode); if(mode==="active") e.classList.add("pulse"); }
+
+/* ---------- CCD via DIRECT → CDA→FHIR → FHIR repo → DTR prefill ---------- */
+const C_DIRECT = "#0e7490"; // cyan for the DIRECT/FHIR ingestion workflow
+let ccdIngested = false;
+async function sendCcd(){
+  const b=$("ccdBtn"); b.disabled=true; b.textContent="📤 Sending CCD…";
+  $("ccdStatus").textContent="";
+  // Provider → DIRECT
+  $("dm-direct").classList.add("routed"); addFlow("#ccdBtn","#dm-direct",C_DIRECT);
+  trace(`<span class="sys">[Provider→DIRECT]</span> C-CDA (CCD R2.1) sent via <b>DIRECT secure messaging</b> to the payer DIRECT address`);
+  await gate(900);
+  // DIRECT → CDA→FHIR transform
+  $("dm-xform").classList.add("routed"); addFlow("#dm-direct","#dm-xform",C_DIRECT);
+  trace(`<span class="sys">[DIRECT→Transform]</span> CDA captured · parsed and mapped to FHIR R4 (Patient, Condition, MedicationStatement, Observation, Procedure)`);
+  await gate(900);
+  // Transform → FHIR repository
+  $("dm-fhir").classList.add("routed"); addFlow("#dm-xform","#dm-fhir",C_DIRECT);
+  trace(`<span class="ok">[Transform→FHIR Repo]</span> FHIR resources persisted to the payer FHIR repository`);
+  await gate(900);
+  // FHIR repo → DTR (prefill source)
+  addFlow("#dm-fhir","#api-dtr",C_DIRECT);
+  trace(`<span class="sys">[FHIR Repo→DTR]</span> DTR prefill source ready · CQL will draw from these FHIR resources`);
+  ccdIngested=true;
+  $("ccdStatus").innerHTML='<b style="color:var(--green)">✓ CCD ingested → FHIR repo will prefill DTR</b>';
+  b.textContent="📤 CCD sent via DIRECT"; b.disabled=true;
+}
+
+async function signOrder(){
+  resetFlow();
+  const key=$("orderSel").value, s=SCEN[key];
+  state={key, s, answers:{}};
+  $("signBtn").disabled=true;
+  $("emrTag").innerHTML = `Source EHR System: <b style="color:var(--ink)">${s.emr}</b> · ePA via PAS · write-back via eHealth Exchange proxy SMART-on-FHIR`;
+  memberStep(1);
+  setApi("crd","active");
+  addFlow("#signBtn","#api-crd",C_API);
+  trace(`<span class="sys">[${s.emr}→CRD]</span> CDS Hooks <b>order-sign</b> fired in <b>${s.emr}</b> · ${s.label} (${s.code}) · Patient/CHPW-77120945`);
+  await gate(900);
+  if(!s.paRequired){
+    setApi("crd","done");
+    addFlow("#api-crd","#ms-3",C_MEM);
+    memberStep(2); memberStep(3,"appr");
+    trace(`<span class="sys">[CRD→EHR]</span> Card returned: <span class="ok">No prior authorization required</span> — order proceeds, zero provider burden`, "");
+    $("crdCard").innerHTML=`<div class="card crd nopa"><span class="badge no">NO PA REQUIRED</span>
+      <h4 style="margin-top:8px">${s.label} — covered, no authorization needed</h4>
+      <p>CRD checked CHPW coverage policy in real time. The order is signed and complete. This is the burden-reduction win: no phone calls, no faxes, no portal.</p></div>`;
+    memberDecision("appr", s, "No prior authorization was required for this service.");
+    bumpMetric("touchless");
+    $("signBtn").disabled=false;
+    return;
+  }
+  setApi("crd","done");
+  trace(`<span class="sys">[CRD→EHR]</span> Card returned: <span class="warn">Prior authorization REQUIRED</span> · policy ref attached · DTR launch link included`);
+  $("crdCard").innerHTML=`<div class="card crd"><span class="badge req">PA REQUIRED</span>
+    <h4 style="margin-top:8px">${s.label} requires prior authorization</h4>
+    <p>CHPW coverage policy applies. ${directOn ? "Send the patient's CCD via DIRECT to prefill documentation, then launch the DTR questionnaire." : "Launch the DTR questionnaire to collect required documentation — most answers prefill from the chart."}</p>
+    <div class="ccd-action">
+      <button class="btn ghost" id="ccdBtn" onclick="sendCcd()">📤 Send CCD via DIRECT</button>
+      <span id="ccdStatus" style="font-size:11.5px;color:var(--muted);margin-left:6px"></span>
+    </div>
+    <div style="margin-top:10px"><button class="btn" onclick="openDtr()">Launch DTR Questionnaire ➜</button></div></div>`;
+}
+
+function openDtr(){
+  const s=state.s;
+  setApi("dtr","active");
+  addFlow("#api-crd","#api-dtr",C_API);
+  if(ccdIngested){
+    ["dm-direct","dm-xform","dm-fhir"].forEach(id=>$(id).classList.add("routed"));
+    addFlow("#dm-fhir","#api-dtr",C_DIRECT);
+    trace(`<span class="sys">[FHIR Repo→DTR]</span> DTR prefilled from the <b>payer FHIR repository</b> (CCD received via DIRECT, transformed to FHIR)`);
+  } else {
+    trace(`<span class="sys">[EHR→DTR]</span> SMART on FHIR launch · DTR retrieves Questionnaire + CQL prefill rules (Documentation Templates &amp; Rules)`);
+  }
+  $("dtrTitle").textContent=`DTR — ${s.label}`;
+  $("dtrPrefillNote").textContent = ccdIngested
+    ? "SMART on FHIR app · prefilled from the payer FHIR repository (CCD via DIRECT → CDA→FHIR)"
+    : "SMART on FHIR app · launched from EHR · answers prefilled from chart via CQL";
+  let html="";
+  s.questionnaire.forEach(q=>{
+    html+=`<div class="q"><label>${q.q}${q.prefill?'<span class="prefill">✓ prefilled</span>':""}</label>`;
+    if(q.type==="text"){
+      html+=`<input value="${q.prefill||""}" readonly>`;
+    } else if(q.type==="yn"){
+      html+=`<div class="opts" data-q="${q.id}">
+        <button onclick="pick('${q.id}','Yes',this)">Yes</button>
+        <button onclick="pick('${q.id}','No',this)">No</button></div>`;
+    } else if(q.type==="choice"){
+      html+=`<div class="opts" data-q="${q.id}">`+q.opts.map(o=>`<button onclick="pick('${q.id}','${o}',this)">${o}</button>`).join("")+`</div>`;
+    }
+    html+=`</div>`;
+  });
+  $("dtrQs").innerHTML=html;
+  $("dtrModal").classList.add("show");
+}
+function pick(qid,val,btn){
+  state.answers[qid]=val;
+  btn.parentElement.querySelectorAll("button").forEach(b=>b.classList.remove("sel"));
+  btn.classList.add("sel");
+}
+function closeDtr(){ $("dtrModal").classList.remove("show"); setApi("dtr",""); trace(`<span class="warn">[DTR]</span> Questionnaire cancelled by provider`); $("signBtn").disabled=false; }
+
+async function submitDtr(){
+  const s=state.s;
+  const unanswered = s.questionnaire.filter(q=>q.type!=="text" && !state.answers[q.id]);
+  if(unanswered.length){ alert("Please answer: "+unanswered.map(q=>q.q).join(" · ")); return; }
+  $("dtrModal").classList.remove("show");
+  setApi("dtr","done");
+  trace(`<span class="sys">[DTR]</span> QuestionnaireResponse complete · ${s.questionnaire.length} items (${s.questionnaire.filter(q=>q.prefill).length} auto-prefilled via CQL)`);
+  $("dtrStatus").innerHTML=`<div class="card"><b>📋 DTR complete</b><p style="margin:4px 0 0">Documentation packaged with the PA request.</p></div>`;
+  await gate(500);
+
+  // After DTR → CHPW ePA Router (SMART on FHIR orchestrator)
+  $("um-router").classList.add("routed");
+  addFlow("#api-dtr","#um-router",C_UM);
+  trace(`<span class="sys">[DTR→Router]</span> <b>CHPW ePA Router</b> (SMART on FHIR) orchestrates the request`);
+  await gate(700);
+
+  // Router → delegated vendor (Jiva for medical, ESI for pharmacy)
+  $("um-"+s.um).classList.add("routed");
+  addFlow("#um-router","#um-"+s.um,C_UM);
+  trace(`<span class="sys">[Router→${s.umName}]</span> routes ${s.code} to <b>${s.umName}</b> (${s.umRole}) for adjudication`);
+  await gate(1000);
+
+  // outcome
+  let outcome="approve";
+  const driver=s.questionnaire.find(q=>q.drives);
+  if(driver){
+    const a=state.answers[driver.id];
+    if(driver.map) outcome=driver.map[a]||"pend";
+    else outcome = (a==="Yes") ? driver.yes : driver.no;
+  }
+
+  // Clinical criteria review — Jiva consults MCG
+  if(s.um==="jiva" && s.mcg){
+    $("criteria").classList.add("routed");
+    $("criteriaRole").innerHTML = `<b style="color:var(--ink)">MCG</b> · ${s.mcg.set} — consulted by ${s.umName}`;
+    addFlow("#um-"+s.um, "#criteria", C_OK);
+    trace(`<span class="sys">[${s.umName}→MCG]</span> Auto-review against <b>${s.mcg.set}</b>`);
+    await gate(700);
+    s.mcg.criteria.forEach(cr=>{
+      const fail = outcome!=="approve" && cr.key;
+      trace(fail
+        ? `<span class="err">[MCG]</span> ✗ ${cr.c} — <b>not documented</b>`
+        : `<span class="ok">[MCG]</span> ✓ ${cr.c} — met`);
+    });
+    await gate(700);
+    addFlow("#criteria", "#um-"+s.um, outcome==="approve"?C_OK:C_WARN);
+    trace(outcome==="approve"
+      ? `<span class="ok">[MCG→${s.umName}]</span> All criteria MET → auto-approval, no manual review`
+      : `<span class="warn">[MCG→${s.umName}]</span> Criteria NOT met → cannot auto-approve`);
+    await gate(500);
+  }
+
+  // Pharmacy — ESI evaluates formulary step-therapy rules
+  if(s.um==="esi" && s.formulary){
+    trace(`<span class="sys">[ESI]</span> Step-therapy rules evaluated against <b>${s.formulary}</b>`);
+    await gate(500);
+  }
+
+  // Vendor → PAS (standardized prior-authorization response)
+  setApi("pas","active");
+  const paId="PA-"+Math.floor(100000+Math.random()*900000);
+  state.paId=paId;
+  addFlow("#um-"+s.um,"#api-pas",C_API);
+  addQueue(paId, s, "Received");
+  trace(`<span class="sys">[${s.umName}→PAS]</span> adjudication complete · PAS prepares standardized response (X12 278 / FHIR ClaimResponse) · id ${paId}`);
+  updateQueue(paId, `Adjudicated → ${s.umName}`, "");
+  memberStep(2);
+  await gate(900);
+  setApi("pas","done");
+  if(outcome==="approve"){
+    trace(`<span class="ok">[PAS]</span> ClaimResponse: <b>APPROVED</b> · Auth # ${s.approve.auth} · returned in seconds, not days`);
+    updateQueue(paId, "Approved", "appr");
+    trace(`<span class="ok">[PAS→eHX→${s.emr}]</span> Writing approved authorization back into <b>${s.emr}</b> via <b>eHealth Exchange proxy SMART-on-FHIR</b> (final push)`);
+    $("ehrDecision").innerHTML=`<div class="card"><b>↩ Returning decision to ${s.emr}…</b><p style="margin:4px 0 0">PAS writing the authorization back via eHealth Exchange proxy SMART-on-FHIR.</p></div>`;
+    await flowDecision(s, C_OK);
+    $("ehrDecision").innerHTML=`<div class="decision appr"><span class="badge appr">APPROVED</span>
+      <h4 style="margin-top:8px">Prior authorization approved</h4>
+      <div class="kv">Authorization #: <span>${s.approve.auth}</span></div>
+      <div class="kv">${s.approve.note}</div>
+      ${(s.um==="jiva"&&s.mcg)?`<div class="kv">Clinical criteria: <span>${s.mcg.set}</span> — all criteria met</div>`:""}
+      ${(s.um==="esi"&&s.formulary)?`<div class="kv">Formulary criteria: <span>${s.formulary}</span> — step therapy met</div>`:""}
+      <div class="kv" style="margin-top:8px;color:var(--muted)">End-to-end: order → CRD → DTR → Router → ${s.umName} → PAS → eHX → EHR.</div></div>`;
+    renderFlows();
+    memberDecision("appr", s, `Authorization #${s.approve.auth}.`);
+    bumpMetric("touchless");
+  } else if(outcome==="pend"){
+    const reason = driver?.pendReason || "Pended for clinical review.";
+    const ref = s.pend?.ref || "RV-"+Math.floor(10000+Math.random()*90000);
+    trace(`<span class="warn">[PAS]</span> ClaimResponse: <b>PENDED</b> · ${reason}`);
+    updateQueue(paId, "Pended — clinical review", "pend");
+    trace(`<span class="warn">[PAS→eHX→${s.emr}]</span> Pend decision returned to <b>${s.emr}</b> via eHealth Exchange proxy SMART-on-FHIR`);
+    $("ehrDecision").innerHTML=`<div class="card"><b>↩ Returning decision to ${s.emr}…</b></div>`;
+    await flowDecision(s, C_WARN);
+    $("ehrDecision").innerHTML=`<div class="decision pend"><span class="badge pend">PENDED</span>
+      <h4 style="margin-top:8px">Pended for review</h4>
+      <div class="kv">Reference #: <span>${ref}</span></div>
+      <div class="kv">${reason}</div>
+      ${s.pend?`<div class="kv">${s.pend.note}</div>`:""}</div>`;
+    showCdexAction(s);
+    renderFlows();
+    memberDecision("pend", s);
+    bumpMetric("pend");
+  } else {
+    trace(`<span class="err">[PAS]</span> ClaimResponse: <b>DENIED</b> · reason code + policy citation returned (CMS-0057 specific-reason requirement)`);
+    updateQueue(paId, "Denied", "den");
+    trace(`<span class="err">[PAS→eHX→${s.emr}]</span> Denial + specific reason returned to <b>${s.emr}</b> via eHealth Exchange proxy SMART-on-FHIR`);
+    $("ehrDecision").innerHTML=`<div class="card"><b>↩ Returning decision to ${s.emr}…</b></div>`;
+    await flowDecision(s, C_DEN);
+    $("ehrDecision").innerHTML=`<div class="decision den"><span class="badge den">DENIED</span>
+      <h4 style="margin-top:8px">Prior authorization denied</h4>
+      <div class="kv">${driver.denyReason}</div>
+      <div class="kv" style="margin-top:8px;color:var(--muted)">Specific denial reason returned electronically per CMS-0057-F — provider can address the gap and resubmit through the same flow.</div></div>`;
+    showCdexAction(s);
+    renderFlows();
+    memberDecision("den", s);
+    bumpMetric("den");
+  }
+  $("signBtn").disabled=false;
+}
+
+async function cdexFlow(){
+  const s=state.s, c=s.cdex, paId=state.paId;
+  const btn=$("cdexBtn");
+  if(btn){ btn.disabled=true; btn.textContent="CDex request in flight…"; }
+
+  $("net-ehx").classList.add("routed");
+  addFlow("#um-"+s.um,"#net-ehx",C_CDEX);
+  trace(`<span class="sys">[HUB→CDex]</span> Task created · code=<b>data-request-query</b> · reasonReference: Claim/${paId} · requester: CHPW UM`);
+  await gate(900);
+  trace(`<span class="sys">[CDex→${c.netName}]</span> Patient discovery (IHE XCPD) · Martinez, Rosa · DOB 03/14/1968 · match found @ <b>${c.source}</b>`);
+  await gate(1000);
+  trace(`<span class="sys">[${c.netName}→${c.source}]</span> Document query (XCA / FHIR DocumentReference search)`);
+  await gate(1000);
+  c.docs.forEach(d=>trace(`<span class="ok">[${c.source}→HUB]</span> Retrieved: ${d}`));
+  addFlow("#net-ehx","#um-"+s.um,C_CDEX);
+  await gate(800);
+  trace(`<span class="sys">[CDex→PAS]</span> $submit-attachment · Bundle{ DocumentReference ×${c.docs.length} } linked to Claim/${paId}`);
+  updateQueue(paId, "Re-adjudicating", "req");
+  setApi("pas","active");
+  await gate(1100);
+  if(s.um==="jiva" && s.mcg){
+    $("criteria").classList.add("routed");
+    addFlow("#um-"+s.um, "#criteria", C_OK);
+    trace(`<span class="sys">[${s.umName}→MCG]</span> MCG re-review with retrieved documentation · ${s.mcg.set}`);
+    await gate(700);
+    addFlow("#criteria", "#um-"+s.um, C_OK);
+    trace(`<span class="ok">[MCG→${s.umName}]</span> All criteria now MET → auto-approval`);
+    await gate(500);
+  }
+  setApi("pas","done");
+
+  const auth=c.authPrefix+"-CDX-"+Math.floor(10000+Math.random()*90000);
+  trace(`<span class="ok">[${s.umName}→PAS]</span> ClaimResponse (updated): <b>APPROVED</b> · Auth # ${auth} · documentation gap closed via network query — no fax, no portal, no phone call`);
+  updateQueue(paId, "Approved via CDex", "appr");
+  trace(`<span class="ok">[PAS→eHX→${s.emr}]</span> Approved authorization written back into <b>${s.emr}</b> via <b>eHealth Exchange proxy SMART-on-FHIR</b> (final push)`);
+  await flowDecision(s, C_OK);
+  $("ehrDecision").innerHTML=`<div class="decision appr"><span class="badge appr">APPROVED — via CDex</span>
+    <h4 style="margin-top:8px">Prior authorization approved after CDex record retrieval</h4>
+    <div class="kv">Authorization #: <span>${auth}</span></div>
+    <div class="kv">Source: <span>${c.source}</span> via ${c.netName}</div>
+    <div class="kv">Documents attached: ${c.docs.length}</div>
+    <div class="kv" style="margin-top:6px">${c.note}</div>
+    <div class="kv" style="margin-top:8px;color:var(--muted)">The payer pulled the missing clinical documentation directly from the treating provider's system over the network — the burden-reduction story end to end.</div></div>`;
+  renderFlows();
+  $("cdexAction").innerHTML="";
+  memberDecision("appr", s, `Resolved automatically — your plan retrieved the needed records. Authorization #${auth}.`);
+  metricCdexResolve();
+}
+
+// CDex "request additional information" action — shown on the PAYER side
+function showCdexAction(s){
+  $("cdexAction").innerHTML = s.cdex
+    ? `<button class="btn" style="width:100%" id="cdexBtn" onclick="cdexFlow()">Request additional information via CDex (eHX) ➜</button>`
+    : "";
+}
+function addQueue(id, s, status){
+  if($("queue").querySelector(".empty")) $("queue").innerHTML="";
+  $("queue").innerHTML += `<div class="queue-item" id="qi-${id}">
+    <div class="grow"><b>${s.label}</b> <span class="id">${id}</span><br>
+    <span class="id">Martinez, Rosa · CHPW-77120945 · ${s.code}</span></div>
+    <span class="badge req" id="qs-${id}">${status}</span></div>`;
+}
+function updateQueue(id, status, cls){
+  const b=$("qs-"+id); if(!b) return;
+  b.textContent=status; b.className="badge "+(cls||"req");
+}
+
+function resetFlow(){
+  ccdIngested=false; // each order starts with a fresh CCD/DIRECT state
+  ["crd","dtr","pas"].forEach(k=>setApi(k,""));
+  document.querySelectorAll(".um").forEach(u=>u.classList.remove("routed"));
+  const ne=$("net-ehx"); if(ne) ne.classList.remove("routed");
+  $("crdCard").innerHTML=""; $("dtrStatus").innerHTML=""; $("ehrDecision").innerHTML="";
+  const et=$("emrTag"); if(et) et.innerHTML="";
+  const ca=$("cdexAction"); if(ca) ca.innerHTML="";
+  const cr=$("criteriaRole"); if(cr) cr.textContent="MCG care guidelines · evidence-based medical necessity — checked by Jiva before adjudicating";
+  clearFlows();
+  clearGate();
+  memberReset();
+}
+function resetDemo(){
+  resetFlow();
+  $("queue").innerHTML='<div class="empty">No prior auth requests yet.</div>';
+  const el=$("trace"); el.dataset.fresh="0";
+  el.innerHTML='<span class="t">—</span> Waiting for activity. Sign an order in the EHR to begin.';
+  $("signBtn").disabled=false;
+  metrics.total=metrics.touchless=metrics.cdex=metrics.savedHrs=0; renderMetrics();
+  skinForCurrentOrder();
+}
+
+/* ---------- GUIDED DEMO ---------- */
+// answer every non-text DTR question; the driver is forced to its non-approve outcome
+function autoAnswerDtr(key){
+  const s=SCEN[key]; if(!s||!s.questionnaire) return;
+  s.questionnaire.forEach(q=>{
+    if(q.type==="text") return;
+    let val;
+    if(q.drives){
+      if(q.type==="yn") val = (q.yes==="approve") ? "No" : "Yes"; // force the non-approve branch
+      else if(q.type==="choice") val = q.opts.find(o=>(q.map?q.map[o]:null)!=="approve") || q.opts[0];
+    } else {
+      val = q.type==="yn" ? "Yes" : q.opts[0];
+    }
+    const btns=[...document.querySelectorAll(`[data-q="${q.id}"] button`)];
+    const target = btns.find(b=>b.textContent.trim()===val) || btns[0];
+    if(target) pick(q.id, val, target);
+  });
+}
+// Each step draws ONLY the hop it narrates, so lines stay in sync with the narration.
+const TOUR = [
+  {title:"Welcome",
+   body:"This walks through CHPW's electronic prior auth on Da Vinci <b>CRD → DTR → PAS</b>, routed by the <b>CHPW ePA Router</b> to its two delegated vendors — <b>Jiva (ZeOmega)</b> for medical UM and <b>ESI</b> for pharmacy — with <b>MCG</b> criteria and <b>CDex</b> as the safety net. Each <b>Next</b> draws the next hop.",
+   say:"Welcome. This demo walks through C H P W's electronic prior authorization on the Da Vinci standards, routed by the C H P W ePA Router to its two delegated vendors: Jiva for medical utilization management and E S I for pharmacy, with M C G criteria and CDex as the safety net. Each Next click draws the next hop in the flow.",
+   action:()=>{ resetDemo(); $("orderSel").value="mri"; skinForCurrentOrder(); }},
+
+  {title:"Order signed — CRD fires",
+   body:"The provider signs an <b>MRI Lumbar Spine</b> order in Epic at UW Medicine. A CDS Hook fires <b>CRD</b>, which checks coverage and returns: <b>prior auth required</b>.",
+   say:"The provider signs an M R I order in Epic at U W Medicine. A C D S Hook fires Coverage Requirements Discovery, which checks coverage and returns: prior authorization required.",
+   action:async()=>{ const M=SCEN.mri; resetFlow(); memberStep(1);
+     $("emrTag").innerHTML=`Source EHR System: <b style="color:var(--ink)">${M.emr}</b> · ePA via PAS · write-back via eHealth Exchange`;
+     setApi("crd","active"); addFlow("#signBtn","#api-crd",C_API);
+     trace(`<span class="sys">[${M.emr}→CRD]</span> order-sign · ${M.label} (${M.code})`);
+     await sleep(550); setApi("crd","done");
+     $("crdCard").innerHTML=`<div class="card crd"><span class="badge req">PA REQUIRED</span><h4 style="margin-top:8px">${M.label} requires prior authorization</h4></div>`; }},
+
+  {title:"DTR — documentation",
+   body:"<b>DTR</b> opens a SMART-on-FHIR questionnaire, prefilled from the chart via CQL. It's completed and packaged with the request.",
+   say:"D T R opens a SMART on FHIR questionnaire, prefilled from the chart. It's completed and packaged with the request.",
+   action:async()=>{ setApi("dtr","active"); addFlow("#api-crd","#api-dtr",C_API);
+     trace(`<span class="sys">[EHR→DTR]</span> DTR Questionnaire prefilled via CQL · QuestionnaireResponse complete`);
+     await sleep(550); setApi("dtr","done");
+     $("dtrStatus").innerHTML=`<div class="card"><b>📋 DTR complete</b><p style="margin:4px 0 0">Documentation packaged with the PA request.</p></div>`; }},
+
+  {title:"CHPW ePA Router orchestrates",
+   body:"After DTR, the request goes to the <b>CHPW ePA Router</b> (SMART on FHIR) — the orchestrator that routes medical requests to <b>Jiva</b> and pharmacy requests to <b>ESI</b>.",
+   say:"After D T R, the request goes to the C H P W ePA Router, the SMART on FHIR orchestrator that routes medical requests to Jiva and pharmacy requests to E S I.",
+   action:async()=>{ $("um-router").classList.add("routed"); addFlow("#api-dtr","#um-router",C_UM);
+     trace(`<span class="sys">[DTR→Router]</span> CHPW ePA Router orchestrates the request`); }},
+
+  {title:"Routed to Jiva (ZeOmega)",
+   body:"This is a medical service, so the Router sends it to <b>Jiva</b> — CHPW's core UM platform — for adjudication.",
+   say:"This is a medical service, so the Router sends it to Jiva, C H P W's core utilization management platform, for adjudication.",
+   action:async()=>{ const M=SCEN.mri; $("um-jiva").classList.add("routed"); addFlow("#um-router","#um-jiva",C_UM);
+     trace(`<span class="sys">[Router→Jiva]</span> routes ${M.code} to Jiva (ZeOmega) — Core UM — for adjudication`); }},
+
+  {title:"Jiva consults MCG",
+   body:"Jiva auto-reviews the request against <b>MCG care guidelines</b>. The key criterion — 6 weeks of conservative therapy — is <b>not documented</b>, so it cannot auto-approve.",
+   say:"Jiva auto reviews the request against M C G care guidelines. The key criterion, six weeks of conservative therapy, is not documented, so it cannot auto approve.",
+   action:async()=>{ const M=SCEN.mri; $("criteria").classList.add("routed");
+     $("criteriaRole").innerHTML=`<b style="color:var(--ink)">MCG</b> · ${M.mcg.set} — consulted by Jiva`;
+     addFlow("#um-jiva","#criteria",C_OK);
+     trace(`<span class="sys">[Jiva→MCG]</span> Auto-review against <b>${M.mcg.set}</b>`);
+     await sleep(450);
+     M.mcg.criteria.forEach(cr=>trace(cr.key
+       ? `<span class="err">[MCG]</span> ✗ ${cr.c} — <b>not documented</b>`
+       : `<span class="ok">[MCG]</span> ✓ ${cr.c} — met`));
+     addFlow("#criteria","#um-jiva",C_WARN);
+     trace(`<span class="warn">[MCG→Jiva]</span> Criteria NOT met → cannot auto-approve`); }},
+
+  {title:"Jiva denies — via PAS",
+   body:"With the conservative-therapy trial undocumented, Jiva <b>denies</b>. <b>PAS</b> returns the specific reason electronically (CMS-0057).",
+   say:"With the conservative therapy trial undocumented, Jiva denies. P A S returns the specific reason electronically, as C M S rule fifty-seven requires.",
+   action:async()=>{ const M=SCEN.mri, paId="PA-"+Math.floor(100000+Math.random()*900000); state={s:M,answers:{},paId};
+     setApi("pas","active"); addFlow("#um-jiva","#api-pas",C_API); addQueue(paId,M,"Adjudicated → Jiva (ZeOmega)");
+     trace(`<span class="sys">[Jiva→PAS]</span> adjudication complete · PAS prepares ClaimResponse · id ${paId}`);
+     memberStep(2); await sleep(550); setApi("pas","done"); updateQueue(paId,"Denied","den");
+     trace(`<span class="err">[PAS]</span> ClaimResponse: <b>DENIED</b> · ${M.questionnaire.find(q=>q.drives).denyReason}`); }},
+
+  {title:"Denial written back via eHX",
+   body:"CHPW has no Epic Payer Platform, so <b>every</b> EMR — including Epic — gets the decision through the <b>eHealth Exchange</b> proxy SMART-on-FHIR write-back. The member sees status and appeal rights.",
+   say:"C H P W has no Epic Payer Platform, so every E M R, including Epic, gets the decision through the eHealth Exchange proxy write-back. The member sees the status and appeal rights.",
+   action:async()=>{ const M=SCEN.mri; $("net-ehx").classList.add("routed");
+     addFlow("#api-pas","#net-ehx",C_DEN); await sleep(450); addFlow("#net-ehx","#ehrDecision",C_DEN);
+     trace(`<span class="err">[PAS→eHX→${M.emr}]</span> denial + specific reason returned to ${M.emr} via eHealth Exchange proxy`);
+     $("ehrDecision").innerHTML=`<div class="decision den"><span class="badge den">DENIED</span><h4 style="margin-top:8px">Prior authorization denied</h4><div class="kv">${M.questionnaire.find(q=>q.drives).denyReason}</div><div class="kv" style="margin-top:8px;color:var(--muted)">Specific denial reason returned electronically per CMS-0057-F.</div></div>`;
+     addFlow("#api-pas","#ms-3",C_MEM); memberDecision("den",M); bumpMetric("den"); showCdexAction(M); renderFlows(); }},
+
+  {title:"CDex retrieves the missing records",
+   body:"The hub fires a <b>CDex Task</b>, finds the patient over <b>eHealth Exchange</b>, and pulls the PT records from <b>Olympic Sports & Spine (eCW)</b> — no fax, no phone call.",
+   say:"The hub fires a CDex task, finds the patient over eHealth Exchange, and pulls the physical therapy records from Olympic Sports and Spine's eClinicalWorks system. No fax, no phone call.",
+   action:async()=>{ const c=SCEN.mri.cdex; $("cdexAction").innerHTML=""; addFlow("#um-jiva","#net-ehx",C_CDEX);
+     trace(`<span class="sys">[HUB→CDex]</span> Task data-request-query → eHealth Exchange · match @ ${c.source}`);
+     await sleep(550); c.docs.forEach(d=>trace(`<span class="ok">[${c.source}→HUB]</span> Retrieved: ${d}`));
+     addFlow("#net-ehx","#um-jiva",C_CDEX);
+     trace(`<span class="sys">[CDex→PAS]</span> $submit-attachment · DocumentReference ×${c.docs.length} linked to the claim`); }},
+
+  {title:"Re-adjudicated — APPROVED",
+   body:"With the records attached, Jiva re-runs <b>MCG</b> — all criteria now met — and re-adjudicates to <b>approved</b>. PAS writes the authorization back into the EHR via eHX, and the member is notified.",
+   say:"With the records attached, Jiva re-runs M C G, all criteria are now met, and it re-adjudicates to approved. P A S writes the authorization back into the E H R via eHealth Exchange, and the member is notified.",
+   action:async()=>{ const M=SCEN.mri, paId=(state&&state.paId)||"PA-000000", auth="JIVA-CDX-"+Math.floor(10000+Math.random()*90000);
+     addFlow("#um-jiva","#criteria",C_OK);
+     trace(`<span class="sys">[Jiva→MCG]</span> MCG re-review with retrieved documentation`);
+     await sleep(400);
+     trace(`<span class="ok">[MCG→Jiva]</span> All criteria now MET → auto-approval`);
+     setApi("pas","active"); await sleep(450); setApi("pas","done");
+     trace(`<span class="ok">[Jiva→PAS]</span> ClaimResponse (updated): <b>APPROVED</b> · Auth # ${auth}`);
+     updateQueue(paId,"Approved via CDex","appr");
+     addFlow("#api-pas","#net-ehx",C_OK); await sleep(450); addFlow("#net-ehx","#ehrDecision",C_OK);
+     trace(`<span class="ok">[PAS→eHX→${M.emr}]</span> Approved authorization written back into ${M.emr} via eHealth Exchange proxy`);
+     $("ehrDecision").innerHTML=`<div class="decision appr"><span class="badge appr">APPROVED — via CDex</span><h4 style="margin-top:8px">Prior authorization approved</h4><div class="kv">Authorization #: <span>${auth}</span></div><div class="kv">Source: <span>${M.cdex.source}</span> via eHealth Exchange</div><div class="kv" style="margin-top:6px">${M.cdex.note}</div></div>`;
+     addFlow("#api-pas","#ms-3",C_MEM); memberDecision("appr",M,`Resolved automatically — your plan retrieved the needed records. Authorization #${auth}.`);
+     metricCdexResolve(); renderFlows(); }},
+
+  {title:"The takeaway",
+   body:"Two delegated vendors — <b>Jiva</b> for medical, <b>ESI</b> for pharmacy — one <b>ePA Router</b>, <b>MCG</b> criteria, and <b>CDex over eHealth Exchange</b> closing documentation gaps. Minutes instead of days, and every decision lands back in the EHR and the member's app. Explore the other orders to see approve, pend, and pharmacy paths.",
+   say:"The takeaway: two delegated vendors, Jiva for medical and E S I for pharmacy, one ePA router, M C G criteria, and CDex over eHealth Exchange closing documentation gaps. Minutes instead of days, and every decision lands back in the E H R and the member's app.",
+   action:()=>{}},
+];
+
+let tourIdx=-1, voiceOn=false;
+function startGuided(){
+  if(stepMode){ stepMode=false; const b=$("stepToggle"); b.textContent="⏭ Step mode: Off"; b.classList.remove("on"); doNext(); }
+  $("narrator").classList.add("show");
+  tourIdx=-1;
+  narAdvance();
+}
+function narAdvance(){
+  tourIdx++;
+  if(tourIdx>=TOUR.length){ endGuided(); return; }
+  const st=TOUR[tourIdx];
+  $("narStep").textContent=(tourIdx+1)+" / "+TOUR.length;
+  $("narBody").innerHTML=`<b>${st.title}</b><br>${st.body}`;
+  $("narNext").textContent = (tourIdx===TOUR.length-1) ? "Finish ✓" : "Next ▶";
+  speak(st.say);
+  if(st.action) st.action();
+}
+function endGuided(){
+  $("narrator").classList.remove("show");
+  if(window.speechSynthesis) speechSynthesis.cancel();
+  tourIdx=-1;
+}
+function toggleVoice(){
+  voiceOn=!voiceOn;
+  $("voiceToggle").textContent = voiceOn ? "🔊 Voice on" : "🔊 Voice";
+  if(!voiceOn && window.speechSynthesis) speechSynthesis.cancel();
+  else if(voiceOn && tourIdx>=0 && TOUR[tourIdx]) speak(TOUR[tourIdx].say);
+}
+function speak(txt){
+  if(!voiceOn || !window.speechSynthesis || !txt) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(txt);
+  u.rate=1.03; u.pitch=1;
+  speechSynthesis.speak(u);
+}
+
+/* ---------- INIT ---------- */
+renderMetrics();
+skinForCurrentOrder();
+$("orderSel").addEventListener("change", skinForCurrentOrder);
+</script>
+</body>
+</html>
