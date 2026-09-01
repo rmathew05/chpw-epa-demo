@@ -794,10 +794,21 @@ async function signOrder(){
     <div style="margin-top:10px"><button class="btn" onclick="openDtr()">Launch DTR Questionnaire ➜</button></div></div>`;
 }
 
-function openDtr(){
+async function openDtr(){
   const s=state.s;
   setApi("dtr","active");
   addFlow("#api-crd","#api-dtr",C_API);
+  // MCG first: the applicable guideline is retrieved and DRIVES the DTR questionnaire
+  if(s.um==="jiva" && s.mcg){
+    $("criteria").classList.add("routed");
+    $("criteriaRole").innerHTML = `<b style="color:var(--ink)">MCG</b> · ${s.mcg.set} — guideline drives the DTR questionnaire`;
+    addFlow("#api-dtr","#criteria",C_OK);
+    trace(`<span class="sys">[DTR→MCG]</span> Retrieving applicable clinical guideline · <b>${s.mcg.set}</b>`);
+    await gate(700);
+    addFlow("#criteria","#api-dtr",C_OK);
+    trace(`<span class="ok">[MCG→DTR]</span> Questionnaire + CQL prefill rules generated from the MCG criteria — the payer asks only what MCG requires`);
+    await gate(600);
+  }
   if(ccdIngested){
     ["dm-direct","dm-xform","dm-fhir"].forEach(id=>$(id).classList.add("routed"));
     addFlow("#dm-fhir","#api-dtr",C_DIRECT);
@@ -869,7 +880,7 @@ async function submitDtr(){
     $("criteria").classList.add("routed");
     $("criteriaRole").innerHTML = `<b style="color:var(--ink)">MCG</b> · ${s.mcg.set} — consulted by ${s.umName}`;
     addFlow("#um-"+s.um, "#criteria", C_OK);
-    trace(`<span class="sys">[${s.umName}→MCG]</span> Auto-review against <b>${s.mcg.set}</b>`);
+    trace(`<span class="sys">[${s.umName}→MCG]</span> Verifying DTR responses against <b>${s.mcg.set}</b>`);
     await gate(700);
     s.mcg.criteria.forEach(cr=>{
       const fail = outcome!=="approve" && cr.key;
@@ -1078,9 +1089,20 @@ const TOUR = [
      await sleep(550); setApi("crd","done");
      $("crdCard").innerHTML=`<div class="card crd"><span class="badge req">PA REQUIRED</span><h4 style="margin-top:8px">${M.label} requires prior authorization</h4></div>`; }},
 
+  {title:"MCG drives the documentation",
+   body:"Before any questionnaire, the hub retrieves the applicable <b>MCG care guideline</b> for lumbar spine MRI. The <b>DTR</b> questionnaire is generated from those criteria — the payer asks only what MCG requires.",
+   say:"Before any questionnaire, the hub retrieves the applicable M C G care guideline for lumbar spine M R I. The D T R questionnaire is generated from those criteria, so the payer asks only what M C G requires.",
+   action:async()=>{ const M=SCEN.mri; $("criteria").classList.add("routed");
+     $("criteriaRole").innerHTML=`<b style="color:var(--ink)">MCG</b> · ${M.mcg.set} — guideline drives the DTR questionnaire`;
+     addFlow("#api-crd","#criteria",C_OK);
+     trace(`<span class="sys">[DTR→MCG]</span> Retrieving applicable clinical guideline · <b>${M.mcg.set}</b>`);
+     await sleep(450);
+     addFlow("#criteria","#api-dtr",C_OK);
+     trace(`<span class="ok">[MCG→DTR]</span> Questionnaire + CQL prefill rules generated from the MCG criteria`); }},
+
   {title:"DTR — documentation",
-   body:"<b>DTR</b> opens a SMART-on-FHIR questionnaire, prefilled from the chart via CQL. It's completed and packaged with the request.",
-   say:"D T R opens a SMART on FHIR questionnaire, prefilled from the chart. It's completed and packaged with the request.",
+   body:"<b>DTR</b> opens a SMART-on-FHIR questionnaire built from the MCG criteria, prefilled from the chart via CQL. It's completed and packaged with the request.",
+   say:"D T R opens a SMART on FHIR questionnaire built from the M C G criteria, prefilled from the chart. It's completed and packaged with the request.",
    action:async()=>{ setApi("dtr","active"); addFlow("#api-crd","#api-dtr",C_API);
      trace(`<span class="sys">[EHR→DTR]</span> DTR Questionnaire prefilled via CQL · QuestionnaireResponse complete`);
      await sleep(550); setApi("dtr","done");
@@ -1098,13 +1120,13 @@ const TOUR = [
    action:async()=>{ const M=SCEN.mri; $("um-jiva").classList.add("routed"); addFlow("#um-router","#um-jiva",C_UM);
      trace(`<span class="sys">[Router→Jiva]</span> routes ${M.code} to Jiva (ZeOmega) — Core UM — for adjudication`); }},
 
-  {title:"Jiva consults MCG",
-   body:"Jiva auto-reviews the request against <b>MCG care guidelines</b>. The key criterion — 6 weeks of conservative therapy — is <b>not documented</b>, so it cannot auto-approve.",
-   say:"Jiva auto reviews the request against M C G care guidelines. The key criterion, six weeks of conservative therapy, is not documented, so it cannot auto approve.",
+  {title:"Jiva verifies against MCG",
+   body:"Jiva checks the DTR responses against the same <b>MCG criteria</b> that generated the questionnaire. The key criterion — 6 weeks of conservative therapy — is <b>not documented</b>, so it cannot auto-approve.",
+   say:"Jiva checks the D T R responses against the same M C G criteria that generated the questionnaire. The key criterion, six weeks of conservative therapy, is not documented, so it cannot auto approve.",
    action:async()=>{ const M=SCEN.mri; $("criteria").classList.add("routed");
      $("criteriaRole").innerHTML=`<b style="color:var(--ink)">MCG</b> · ${M.mcg.set} — consulted by Jiva`;
      addFlow("#um-jiva","#criteria",C_OK);
-     trace(`<span class="sys">[Jiva→MCG]</span> Auto-review against <b>${M.mcg.set}</b>`);
+     trace(`<span class="sys">[Jiva→MCG]</span> Verifying DTR responses against <b>${M.mcg.set}</b>`);
      await sleep(450);
      M.mcg.criteria.forEach(cr=>trace(cr.key
        ? `<span class="err">[MCG]</span> ✗ ${cr.c} — <b>not documented</b>`
